@@ -52,6 +52,14 @@ matchRouter.get("/", async (req, res) => {
       .limit(safeLimit)
       .offset(offset);
 
+    await Promise.all(
+      matchList.map((match) =>
+        syncMatchStatus(match, (status) =>
+          db.update(matches).set({ status }).where(eq(matches.id, match.id)),
+        ),
+      ),
+    );
+
     res.json({ data: matchList, total, limit: safeLimit, offset });
   } catch (e) {
     console.log(e);
@@ -77,6 +85,10 @@ matchRouter.get("/:id", async (req, res) => {
     if (!match) {
       return res.status(404).json({ error: "Match not found." });
     }
+
+    await syncMatchStatus(match, (status) =>
+      db.update(matches).set({ status }).where(eq(matches.id, match.id)),
+    );
 
     res.json({ data: match });
   } catch (e) {
@@ -113,6 +125,37 @@ matchRouter.patch("/:id", requireAdmin, async (req, res) => {
 
     if (!existing) {
       return res.status(404).json({ error: "Match not found." });
+    }
+
+    const currentStatus =
+      getMatchStatus(existing.startTime, existing.endTime) ?? existing.status;
+
+    if (currentStatus === "finished") {
+      return res
+        .status(409)
+        .json({ error: "Cannot update a finished match.", status: currentStatus });
+    }
+
+    const touchesScores =
+      body.homeScore !== undefined || body.awayScore !== undefined;
+    if (touchesScores && currentStatus !== "live") {
+      return res.status(409).json({
+        error: "Scores can only be updated on live matches.",
+        status: currentStatus,
+      });
+    }
+
+    if (currentStatus === "live") {
+      const disallowed = ["sport", "homeTeam", "awayTeam", "startTime"].filter(
+        (field) => body[field] !== undefined,
+      );
+      if (disallowed.length > 0) {
+        return res.status(409).json({
+          error: `Cannot update ${disallowed.join(", ")} on a live match.`,
+          allowed: ["homeScore", "awayScore", "endTime"],
+          status: currentStatus,
+        });
+      }
     }
 
     const startTime = body.startTime
@@ -171,6 +214,14 @@ matchRouter.post("/", requireAdmin, async (req, res) => {
     data: { startTime, endTime, homeScore, awayScore, ...rest },
   } = parsed;
 
+  const status = getMatchStatus(startTime, endTime);
+  if (status !== "live" && ((homeScore ?? 0) > 0 || (awayScore ?? 0) > 0)) {
+    return res.status(409).json({
+      error: "Scores can only be set on live matches.",
+      status,
+    });
+  }
+
   try {
     const [event] = await db
       .insert(matches)
@@ -180,7 +231,7 @@ matchRouter.post("/", requireAdmin, async (req, res) => {
         awayscore: awayScore ?? 0,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        status: getMatchStatus(startTime, endTime),
+        status,
       })
       .returning();
 
