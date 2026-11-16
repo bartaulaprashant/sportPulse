@@ -5,6 +5,7 @@ import {
   matchIdParamSchema,
 } from "../validation/matches.js";
 import { getMatchStatus } from "../utils/matchStatus.js";
+import { requireAdmin } from "../auth.js";
 import { matches } from "../db/schema.js";
 import { db } from "../db/db.js";
 import { and, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
@@ -83,7 +84,7 @@ matchRouter.get("/:id", async (req, res) => {
   }
 });
 
-matchRouter.post("/", async (req, res) => {
+matchRouter.post("/", requireAdmin, async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
 
   if (!parsed.success) {

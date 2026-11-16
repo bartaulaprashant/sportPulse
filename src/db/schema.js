@@ -14,6 +14,13 @@ export const matchStatusEnum = pgEnum("match_status", [
   "finished",
 ]);
 
+export const admins = pgTable("admins", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
   sport: text("sport").notNull(),

@@ -3,6 +3,7 @@ import { matchIdParamSchema } from "../validation/matches.js";
 import { createCommentarySchema, listCommentaryQuerySchema } from "../validation/commentary.js";
 import { db } from "../db/db.js";
 import { commentary } from "../db/schema.js";
+import { requireAdmin } from "../auth.js";
 import { eq, desc } from "drizzle-orm";
 
 const MAX_LIMIT = 100;
@@ -44,7 +45,7 @@ commentaryRouter.get("/", async (req, res) => {
   }
 });
 
-commentaryRouter.post("/", async (req, res) => {
+commentaryRouter.post("/", requireAdmin, async (req, res) => {
   const paramsResult = matchIdParamSchema.safeParse(req.params);
   if (!paramsResult.success) {
     return res

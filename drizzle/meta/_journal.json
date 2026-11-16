@@ -8,6 +8,13 @@
       "when": 1794750793245,
       "tag": "0000_pale_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794795205740,
+      "tag": "0001_serious_toad_men",
+      "breakpoints": true
     }
   ]
 }
