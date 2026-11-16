@@ -7,7 +7,15 @@ export const MATCH_STATUS = {
 };
 
 export const listMatchesQuerySchema = z.object({
+  sport: z.string().min(1).optional(),
+  status: z
+    .enum([MATCH_STATUS.SCHEDULED, MATCH_STATUS.LIVE, MATCH_STATUS.FINISHED])
+    .optional(),
+  team: z.string().min(1).optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
+  offset: z.coerce.number().int().nonnegative().optional(),
 });
 
 export const matchIdParamSchema = z.object({
