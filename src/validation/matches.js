@@ -44,7 +44,17 @@ export const createMatchSchema = z
     }
   });
 
-export const updateScoreSchema = z.object({
-  homeScore: z.coerce.number().int().nonnegative(),
-  awayScore: z.coerce.number().int().nonnegative(),
-});
+export const updateMatchSchema = z
+  .object({
+    sport: z.string().min(1).optional(),
+    homeTeam: z.string().min(1).optional(),
+    awayTeam: z.string().min(1).optional(),
+    startTime: z.iso.datetime().optional(),
+    endTime: z.iso.datetime().optional(),
+    homeScore: z.coerce.number().int().nonnegative().optional(),
+    awayScore: z.coerce.number().int().nonnegative().optional(),
+  })
+  .refine(
+    (data) => Object.values(data).some((v) => v !== undefined),
+    { message: "At least one field must be provided" },
+  );

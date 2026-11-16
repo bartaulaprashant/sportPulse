@@ -147,5 +147,12 @@ export function attachWebSocketServer(server) {
     });
   }
 
-  return { broadCastMatchCreated, broadcastCommentary };
+  function broadcastMatchUpdated(matchId, match) {
+    broadcastToMatch(matchId, {
+      type: "match_updated",
+      data: match,
+    });
+  }
+
+  return { broadCastMatchCreated, broadcastCommentary, broadcastMatchUpdated };
 }

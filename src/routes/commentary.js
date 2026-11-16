@@ -2,7 +2,8 @@ import { Router } from "express";
 import { matchIdParamSchema } from "../validation/matches.js";
 import { createCommentarySchema, listCommentaryQuerySchema } from "../validation/commentary.js";
 import { db } from "../db/db.js";
-import { commentary } from "../db/schema.js";
+import { commentary, matches } from "../db/schema.js";
+import { getMatchStatus } from "../utils/matchStatus.js";
 import { requireAdmin } from "../auth.js";
 import { eq, desc } from "drizzle-orm";
 
@@ -61,11 +62,31 @@ commentaryRouter.post("/", requireAdmin, async (req, res) => {
     });
   }
   try {
+    const matchId = paramsResult.data.id;
+
+    const [match] = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.id, matchId))
+      .limit(1);
+
+    if (!match) {
+      return res.status(404).json({ error: "Match not found." });
+    }
+
+    const status = getMatchStatus(match.startTime, match.endTime) ?? match.status;
+    if (status !== "live") {
+      return res.status(409).json({
+        error: "Commentary can only be added to live matches.",
+        status,
+      });
+    }
+
     const { minutes, ...rest } = bodyResult.data;
     const [entry] = await db
       .insert(commentary)
       .values({
-        matchId: paramsResult.data.id,
+        matchId,
         minute: minutes,
         ...rest,
       })

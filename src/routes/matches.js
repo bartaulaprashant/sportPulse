@@ -3,8 +3,9 @@ import {
   createMatchSchema,
   listMatchesQuerySchema,
   matchIdParamSchema,
+  updateMatchSchema,
 } from "../validation/matches.js";
-import { getMatchStatus } from "../utils/matchStatus.js";
+import { getMatchStatus, syncMatchStatus } from "../utils/matchStatus.js";
 import { requireAdmin } from "../auth.js";
 import { matches } from "../db/schema.js";
 import { db } from "../db/db.js";
@@ -84,6 +85,77 @@ matchRouter.get("/:id", async (req, res) => {
   }
 });
 
+matchRouter.patch("/:id", requireAdmin, async (req, res) => {
+  const paramsResult = matchIdParamSchema.safeParse(req.params);
+  if (!paramsResult.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid match ID.", details: paramsResult.error.issues });
+  }
+
+  const bodyResult = updateMatchSchema.safeParse(req.body);
+  if (!bodyResult.success) {
+    return res.status(400).json({
+      error: "Invalid update payload.",
+      details: bodyResult.error.issues,
+    });
+  }
+
+  const { id } = paramsResult.data;
+  const body = bodyResult.data;
+
+  try {
+    const [existing] = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.id, id))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Match not found." });
+    }
+
+    const startTime = body.startTime
+      ? new Date(body.startTime)
+      : existing.startTime;
+    const endTime = body.endTime ? new Date(body.endTime) : existing.endTime;
+    if (startTime && endTime && endTime <= startTime) {
+      return res.status(400).json({
+        error: "endTime must be chronologically after startTime",
+      });
+    }
+
+    const updates = {};
+    if (body.sport !== undefined) updates.sport = body.sport;
+    if (body.homeTeam !== undefined) updates.homeTeam = body.homeTeam;
+    if (body.awayTeam !== undefined) updates.awayTeam = body.awayTeam;
+    if (body.startTime !== undefined) updates.startTime = startTime;
+    if (body.endTime !== undefined) updates.endTime = endTime;
+    if (body.homeScore !== undefined) updates.homescore = body.homeScore;
+    if (body.awayScore !== undefined) updates.awayscore = body.awayScore;
+
+    const [updated] =
+      Object.keys(updates).length > 0
+        ? await db
+            .update(matches)
+            .set(updates)
+            .where(eq(matches.id, id))
+            .returning()
+        : [existing];
+
+    await syncMatchStatus(updated, async (status) => {
+      await db.update(matches).set({ status }).where(eq(matches.id, id));
+    });
+
+    res.app.locals.broadcastMatchUpdated?.(id, updated);
+
+    res.json({ data: updated });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: "Failed to update match." });
+  }
+});
+
 matchRouter.post("/", requireAdmin, async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
 
@@ -96,18 +168,18 @@ matchRouter.post("/", requireAdmin, async (req, res) => {
   }
 
   const {
-    data: { startTime, endTime, homeScore, awayScore },
+    data: { startTime, endTime, homeScore, awayScore, ...rest },
   } = parsed;
 
   try {
     const [event] = await db
       .insert(matches)
       .values({
-        ...parsed.data,
+        ...rest,
+        homescore: homeScore ?? 0,
+        awayscore: awayScore ?? 0,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        homeScore: homeScore ?? 0,
-        awayScore: awayScore ?? 0,
         status: getMatchStatus(startTime, endTime),
       })
       .returning();

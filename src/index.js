@@ -23,9 +23,11 @@ app.use("/auth", authRouter);
 app.use("/matches", matchRouter);
 app.use("/matches/:id/commentary", commentaryRouter);
 
-const { broadCastMatchCreated, broadcastCommentary } = attachWebSocketServer(server);
+const { broadCastMatchCreated, broadcastCommentary, broadcastMatchUpdated } =
+  attachWebSocketServer(server);
 app.locals.broadcastCommentary = broadcastCommentary;
 app.locals.broadCastMatchCreated = broadCastMatchCreated;
+app.locals.broadcastMatchUpdated = broadcastMatchUpdated;
 
 server.listen(PORT, HOST, () => {
   const baseUrl =
