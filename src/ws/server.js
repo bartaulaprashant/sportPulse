@@ -6,13 +6,14 @@ const matchSubscribers = new Map();
 function subscribe(matchId, socket) {
   if (!matchSubscribers.has(matchId)) {
     matchSubscribers.set(matchId, new Set());
+    
   }
 
   matchSubscribers.get(matchId).add(socket);
 }
 function unsubscribe(matchId, socket) {
   const subscribers = matchSubscribers.get(matchId);
-  if (matchSubscribers) return;
+  if (!subscribers) return;
 
   subscribers.delete(socket);
 
@@ -59,6 +60,7 @@ function handleMessage(socket, data) {
     message = JSON.parse(data.toString());
   } catch (e) {
     sendJson(socket, { type: "error", error: "invalid JSON" });
+    return;
   }
 
   if (message?.type === "subscribe" && Number.isInteger(message.matchId)) {
@@ -79,7 +81,7 @@ export function attachWebSocketServer(server) {
   const wss = new WebSocketServer({
     server,
     path: "/ws",
-    maxPayload: 1024 * 1024 * 1024,
+    maxPayload: 16 * 1024,
   });
 
   wss.on("connection", async (socket, req) => {
