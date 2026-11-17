@@ -4,6 +4,7 @@ import { api, type Commentary, type Match } from "../api/client";
 import { MatchScoreline } from "../components/MatchCard";
 import StatusBadge from "../components/StatusBadge";
 import TeamLogo from "../components/TeamLogo";
+import NavBar from "../components/NavBar";
 
 const EVENT_STYLES: Record<string, string> = {
   goal: "ev-goal",
@@ -52,9 +53,7 @@ export default function MatchDetail() {
   if (error) {
     return (
       <div className="pub">
-        <div className="pub-nav">
-          <Link to="/" className="pub-brand">sport<span>Pulse</span></Link>
-        </div>
+        <NavBar />
         <main className="pub-main">
           <div className="error">{error}</div>
           <p><Link to="/">← Back to matches</Link></p>
@@ -66,9 +65,7 @@ export default function MatchDetail() {
   if (!match) {
     return (
       <div className="pub">
-        <div className="pub-nav">
-          <Link to="/" className="pub-brand">sport<span>Pulse</span></Link>
-        </div>
+        <NavBar />
         <main className="pub-main"><p className="muted">Loading match…</p></main>
       </div>
     );
@@ -76,13 +73,14 @@ export default function MatchDetail() {
 
   return (
     <div className="pub">
-      <header className="pub-nav">
-        <Link to="/" className="pub-brand">sport<span>Pulse</span></Link>
-        <nav className="pub-nav-links">
-          <Link to="/">← All matches</Link>
-          <Link to="/admin">Admin</Link>
-        </nav>
-      </header>
+      <NavBar
+        right={
+          <>
+            <Link to="/">← All matches</Link>
+            <Link to="/admin">Admin</Link>
+          </>
+        }
+      />
 
       <main className="pub-main pub-detail">
         <div className="card pub-scoreboard">

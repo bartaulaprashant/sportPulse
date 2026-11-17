@@ -4,6 +4,7 @@ import { useMatches } from "../hooks/useMatches";
 import MatchCard from "../components/MatchCard";
 import { MatchScoreline } from "../components/MatchCard";
 import StatusBadge from "../components/StatusBadge";
+import NavBar from "../components/NavBar";
 import type { Match } from "../api/client";
 
 type Tab = "live" | "upcoming" | "results";
@@ -51,15 +52,7 @@ export default function Home() {
 
   return (
     <div className="pub">
-      <header className="pub-nav">
-        <Link to="/" className="pub-brand">
-          sport<span>Pulse</span>
-        </Link>
-        <nav className="pub-nav-links">
-          <span className="live-dot" /> Live scores
-          <Link to="/admin">Admin</Link>
-        </nav>
-      </header>
+      <NavBar sports={sports} sport={sport} onSportChange={setSport} />
 
       <main className="pub-main">
         <div className="pub-hero">
@@ -94,18 +87,6 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <select
-            className="pub-sport-select"
-            value={sport}
-            onChange={(e) => setSport(e.target.value)}
-          >
-            <option value="all">All sports</option>
-            {sports.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
         </div>
 
         {error && <div className="error">{error}</div>}
