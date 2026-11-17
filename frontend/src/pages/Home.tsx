@@ -27,13 +27,22 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>("live");
   const [sport, setSport] = useState<string>("all");
 
-  const sports = useMemo(
-    () => Array.from(new Set(matches.map((m) => m.sport))).sort(),
-    [matches],
-  );
+  const sports = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const m of matches) {
+      const key = m.sport.trim().toLowerCase();
+      if (key && !seen.has(key)) seen.set(key, m.sport.trim());
+    }
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
+  }, [matches]);
 
   const filtered = useMemo(
-    () => (sport === "all" ? matches : matches.filter((m) => m.sport === sport)),
+    () =>
+      sport === "all"
+        ? matches
+        : matches.filter(
+            (m) => m.sport.trim().toLowerCase() === sport.trim().toLowerCase(),
+          ),
     [matches, sport],
   );
 
