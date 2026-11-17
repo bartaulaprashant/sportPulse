@@ -75,6 +75,12 @@ export default function Home() {
               ? "Scores and commentary updated in real time."
               : "No matches in play right now — check the fixtures below."}
           </p>
+          <Link to="/admin" className="pub-hero-cta">
+            Open admin panel
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Link>
         </div>
 
         <div className="pub-controls">
