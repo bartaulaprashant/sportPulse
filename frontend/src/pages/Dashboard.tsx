@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import { api, type Commentary, type Match } from "../api/client";
 import { listTeamNames } from "../teams/registry";
 import TeamLogo from "../components/TeamLogo";
+import NavBar from "../components/NavBar";
 
 const TEAM_NAMES = listTeamNames();
 
@@ -50,22 +51,29 @@ export const Dashboard=() =>{
   }, [load]);
 
   return (
-    <div className="page">
-      <header className="topbar">
-        <h1>sportPulse</h1>
-        <div className="topbar-right">
-          <span className="muted">{admin?.email}</span>
-          <Link className="ghost btn-link" to="/">
-            View site
-          </Link>
-          <button className="ghost" onClick={logout}>
-            Log out
-          </button>
-        </div>
-      </header>
+    <div className="pub">
+      <NavBar
+        right={
+          <>
+            <span className="nav-profile" title={admin?.email ?? "Admin"}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <Link className="nav-link-btn" to="/">
+              View site
+            </Link>
+            <button className="ghost nav-logout" onClick={logout}>
+              Log out
+            </button>
+          </>
+        }
+      />
 
+      <main className="pub-main admin-main">
       <div className="toolbar">
-        <div className="filters">
+        <div className="filters pub-tabs">
           {STATUSES.map((s) => (
             <button
               key={s}
@@ -117,6 +125,7 @@ export const Dashboard=() =>{
           />
         ))}
       </div>
+      </main>
     </div>
   );
 }

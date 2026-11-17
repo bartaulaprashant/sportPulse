@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMatches } from "../hooks/useMatches";
 import MatchCard from "../components/MatchCard";
-import { MatchScoreline } from "../components/MatchCard";
-import StatusBadge from "../components/StatusBadge";
+import TeamLogo from "../components/TeamLogo";
 import NavBar from "../components/NavBar";
 import type { Match } from "../api/client";
 
@@ -20,6 +19,22 @@ function byStartAsc(a: Match, b: Match) {
 }
 function byStartDesc(a: Match, b: Match) {
   return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+}
+
+function ordinal(n: number) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+}
+
+function formatFeaturedDate(iso: string) {
+  const d = new Date(iso);
+  const month = d.toLocaleString("en", { month: "long" }).toLowerCase();
+  const time = d
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    .toLowerCase()
+    .replace(" ", "");
+  return `${ordinal(d.getDate())} ${month} · ${time}`;
 }
 
 export default function Home() {
@@ -116,14 +131,46 @@ export default function Home() {
         {featured && (
           <Link to={`/match/${featured.id}`} className="pub-featured">
             <div className="pub-featured-top">
-              <span className="pub-featured-tag">Featured · Live</span>
-              <StatusBadge status={featured.status} />
+              <span className="pub-featured-tag">Featured</span>
+              <span className="pub-featured-sport muted">{featured.sport}</span>
             </div>
-            <MatchScoreline match={featured} large />
-            <div className="muted pub-featured-meta">
-              {featured.sport}
-              {featured.endTime &&
-                ` · ends ${new Date(featured.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+
+            <div className="pub-featured-teams">
+              <div className="pub-ft">
+                <TeamLogo name={featured.homeTeam} size={96} />
+                <span className="pub-ft-name">{featured.homeTeam}</span>
+              </div>
+              <div className="pub-featured-mid">
+                <span className="pub-ft-title">Champions League</span>
+                <span className="pub-ft-date">{formatFeaturedDate(featured.startTime)}</span>
+                <span className="pub-ft-sub muted">Matchday 7 · Wembley Stadium</span>
+              </div>
+              <div className="pub-ft">
+                <span className="pub-ft-name">{featured.awayTeam}</span>
+                <TeamLogo name={featured.awayTeam} size={96} />
+              </div>
+            </div>
+
+            <div className="pub-featured-score" aria-label={`Score ${featured.homescore} to ${featured.awayscore}`}>
+              <span>{featured.homescore}</span>
+              <span className="pub-featured-score-sep">–</span>
+              <span>{featured.awayscore}</span>
+            </div>
+
+            <div className="pub-featured-foot">
+              <span className="pub-featured-live">
+                <span className="live-dot" />
+                LIVE
+                {featured.startTime &&
+                  ` · ${Math.max(0, Math.floor((Date.now() - new Date(featured.startTime).getTime()) / 60000))}'`}
+              </span>
+              <span className="pub-featured-viewers muted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                12.4k watching
+              </span>
             </div>
           </Link>
         )}
