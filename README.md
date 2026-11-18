@@ -85,14 +85,3 @@ Frontend runs on `http://localhost:5173`, API on `http://localhost:8000`.
 
 ---
 
-## GitHub Repo Description (25–35 words)
-
-> Live sports scores and real-time commentary platform. React + TypeScript frontend with a glassmorphism UI, Express + PostgreSQL backend, WebSocket updates, and an admin dashboard for managing matches.
-
-*(33 words)*
-
----
-
-## License
-
-ISC
